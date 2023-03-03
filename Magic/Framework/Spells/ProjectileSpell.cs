@@ -35,7 +35,6 @@ namespace Magic.Framework.Spells
                         return true;
                     }
                 }
-                Game1.playSound("clank");
                 return false;
             } else
             {

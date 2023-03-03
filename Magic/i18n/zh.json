@@ -124,6 +124,22 @@
     "spell.eldritch:spirit.desc": "召唤迷失的灵魂为你而战",
 
 
+    "spell.toil:collect.name": "Collect",
+    "spell.toil:collect.desc": "Collect from machines at a distance.\nHigher levels increases collection radius.",
+
+    "spell.elemental:kiln.name": "Kiln Wood",
+    "spell.elemental:kiln.desc": "Catalyst: Wood or Driftwood \nTurn wood into coal, higher level reduces amount of wood needed.",
+
+    "spell.eldritch:charm.name": "Charm",
+    "spell.eldritch:charm.desc": "Catalyst: Your life \n Sacrifice Health to make people like you.",
+
+    "spell.life:cleanse.name": "Cleanse",
+    "spell.life:cleanse.desc": "Remove All buffs and \ndebuffs from one's self.",
+
+    "spell.nature:magnetic_force.name": "Magnetic Barrier",
+    "spell.nature:magnetic_force.desc": "A magnetic shield. \n Protect one self while attracting items.",
+
+
     /*********
     ** Items
     *********/
