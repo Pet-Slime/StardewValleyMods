@@ -23,6 +23,26 @@ namespace Magic.Framework.Spells
         public ProjectileSpell(string school, string id, int manaBase, int dmgBase, int dmgIncr)
             : this(school, id, manaBase, dmgBase, dmgIncr, null, null) { }
 
+        public override bool CanCast(Farmer player, int level)
+        {
+            if (Seeking)
+            {
+                var mobs = player.currentLocation.characters;
+                foreach (var mob in mobs)
+                {
+                    if (mob is StardewValley.Monsters.Monster monster)
+                    {
+                        return true;
+                    }
+                }
+                Game1.playSound("clank");
+                return false;
+            } else
+            {
+                return true;
+            }
+        }
+
         public ProjectileSpell(string school, string id, int manaBase, int dmgBase, int dmgIncr, string snd, string sndHit, bool seeking = false)
             : base(school, id)
         {

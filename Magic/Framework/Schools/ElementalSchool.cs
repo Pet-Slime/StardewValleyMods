@@ -17,7 +17,7 @@ namespace Magic.Framework.Schools
 
         public override Spell[] GetSpellsTier2()
         {
-            return new[] { SpellManager.Get("elemental:descend") };
+            return new[] { SpellManager.Get("elemental:descend"), SpellManager.Get("elemental:kiln") };
         }
 
         public override Spell[] GetSpellsTier3()

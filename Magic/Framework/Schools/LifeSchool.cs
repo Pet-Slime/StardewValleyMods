@@ -12,7 +12,7 @@ namespace Magic.Framework.Schools
 
         public override Spell[] GetSpellsTier1()
         {
-            return new[] { SpellManager.Get("life:evac") };
+            return new[] { SpellManager.Get("life:evac"), SpellManager.Get("life:cleanse") };
         }
 
         public override Spell[] GetSpellsTier2()

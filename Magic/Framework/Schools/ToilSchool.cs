@@ -18,7 +18,7 @@ namespace Magic.Framework.Schools
 
         public override Spell[] GetSpellsTier2()
         {
-            return new[] { SpellManager.Get("toil:water") };
+            return new[] { SpellManager.Get("toil:water"), SpellManager.Get("toil:collect") };
         }
 
 

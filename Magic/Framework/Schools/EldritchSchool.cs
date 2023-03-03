@@ -17,7 +17,7 @@ namespace Magic.Framework.Schools
 
         public override Spell[] GetSpellsTier2()
         {
-            return new[] { SpellManager.Get("eldritch:lucksteal") };
+            return new[] { SpellManager.Get("eldritch:lucksteal"), SpellManager.Get("eldritch:charm") };
         }
 
         public override Spell[] GetSpellsTier3()

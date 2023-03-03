@@ -33,6 +33,7 @@ namespace Magic.Framework.Spells
         {
             player.position.X = EvacSpell.EnterX;
             player.position.Y = EvacSpell.EnterY;
+            player.currentLocation.localSoundAt("debuffSpell", player.getTileLocation());
             player.AddCustomSkillExperience(Magic.Skill, 5);
             return null;
         }

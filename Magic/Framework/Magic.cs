@@ -96,13 +96,9 @@ namespace Magic.Framework
         /// <param name="overrideMagicLevel">The magic skill level, or <c>null</c> to get it from the player.</param>
         public static void FixMagicIfNeeded(Farmer player, int? overrideMagicLevel = null)
         {
-
-            Log.Info("FixMagicIfNeeded Fired 1");
             // skip if player hasn't learned magic
             if (!Magic.LearnedMagic && overrideMagicLevel is not > 0)
                 return;
-
-            Log.Info("FixMagicIfNeeded Fired 2");
 
             // get magic info
             int magicLevel = overrideMagicLevel ?? player.GetCustomSkillLevel(Skill.MagicSkillId);
@@ -131,7 +127,7 @@ namespace Magic.Framework
             string EnchantSpell = "arcane:enchant";
             string DisenchantSpell = "arcane:disenchant";
             if (Mod.Config.EnchantSpell == true) {
-                Log.Error("Using the Balanced Enchantments");
+                Log.DebugOnlyLog("Using the Balanced Enchantment spells");
                 EnchantSpell = "arcane:enchant_costly";
                 DisenchantSpell = "arcane:disenchant_costly";
             } 

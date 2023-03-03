@@ -32,6 +32,7 @@ namespace Magic.Framework.Spells
             player.consumeObject(336, 1);
             Game1.timeOfDay -= 200;
             player.AddCustomSkillExperience(Magic.Skill, 25);
+            player.LocalSound("Crystal Bells");
             return null;
         }
     }

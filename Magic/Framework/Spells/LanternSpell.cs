@@ -24,7 +24,7 @@ namespace Magic.Framework.Spells
 
         public override int GetManaCost(Farmer player, int level)
         {
-            return level * 3;
+            return (level+1) * 3;
         }
 
 
@@ -42,7 +42,7 @@ namespace Magic.Framework.Spells
             };
 
             player.currentLocation.sharedLights.Add(this.GetUnusedLightSourceId(player.currentLocation), new LightSource(1, Game1.player.position, power));
-            player.AddCustomSkillExperience(Magic.Skill, level);
+            player.AddCustomSkillExperience(Magic.Skill, level+1);
 
             return null;
         }

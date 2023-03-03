@@ -41,19 +41,24 @@ namespace Magic.Framework
 
             SpellManager.Register(new AnalyzeSpell());
             SpellManager.Register(new ProjectileSpell(SchoolId.Arcane, "magicmissle", 5, 7, 15, "flameSpell", "flameSpellHit", seeking: true));
-            
+            // the Enchant spells are handeled elsewhere
+            // the dischant spells are handeled elsewhere
             SpellManager.Register(new RewindSpell());
 
             SpellManager.Register(new ClearDebrisSpell());
             SpellManager.Register(new TillSpell());
             SpellManager.Register(new WaterSpell());
+            SpellManager.Register(new CollectionSpell());
+            //Blink and Harvest are handeled elsewhere
 
             SpellManager.Register(new LanternSpell(getNewId));
             SpellManager.Register(new TendrilsSpell());
+            SpellManager.Register(new MagnetSpell());
             SpellManager.Register(new ShockwaveSpell());
             SpellManager.Register(new PhotosynthesisSpell());
 
             SpellManager.Register(new HealSpell());
+            SpellManager.Register(new CleanseSpell());
             SpellManager.Register(new HasteSpell());
             SpellManager.Register(new BuffSpell());
             SpellManager.Register(new EvacSpell());
@@ -61,9 +66,11 @@ namespace Magic.Framework
             SpellManager.Register(new ProjectileSpell(SchoolId.Elemental, "frostbolt", 7, 10, 20, "flameSpell", "flameSpellHit"));
             SpellManager.Register(new ProjectileSpell(SchoolId.Elemental, "fireball", 7, 10, 20, "flameSpell", "flameSpellHit"));
             SpellManager.Register(new DescendSpell());
+            SpellManager.Register(new KilnSpell());
             SpellManager.Register(new TeleportSpell());
 
             SpellManager.Register(new MeteorSpell());
+            SpellManager.Register(new CharmSpell());
             SpellManager.Register(new BloodManaSpell());
             SpellManager.Register(new LuckStealSpell());
             SpellManager.Register(new SpiritSpell());

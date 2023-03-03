@@ -54,6 +54,11 @@ namespace Magic.Framework.Spells
                     {
                         case Axe or Pickaxe:
                             spellsLearnt.Add("toil:cleardebris");
+                            spellsLearnt.Add("toil:collect");
+                            spellsLearnt.Add("nature:magnetic_force");
+                            spellsLearnt.Add("life:cleanse");
+                            spellsLearnt.Add("elemental:kiln");
+                            spellsLearnt.Add("eldritch:charm");
                             break;
 
                         case Hoe:
@@ -92,6 +97,22 @@ namespace Magic.Framework.Spells
 
                             case 161: // ice pip
                                 spellsLearnt.Add("elemental:frostbolt");
+                                break;
+
+                            case 169 or 388: // driftwood or wood
+                                spellsLearnt.Add("elemental:kiln");
+                                break;
+
+                            case 897: // monster musk
+                                spellsLearnt.Add("eldritch:charm");
+                                break;
+
+                            case 921: // Squid Ink Ravioli
+                                spellsLearnt.Add("elemental:frostbolt");
+                                break;
+
+                            case 703 or 519: // magnet, magnet ring
+                                spellsLearnt.Add("nature:magnetic_force");
                                 break;
                         }
                     }

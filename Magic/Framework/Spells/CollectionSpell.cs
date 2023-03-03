@@ -1,18 +1,28 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection.PortableExecutable;
 using Magic.Framework.Schools;
 using Microsoft.Xna.Framework;
 using SpaceCore;
+using SpaceShared;
 using StardewValley;
+using StardewValley.Characters;
+using StardewValley.Locations;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
+using xTile.Tiles;
 
 namespace Magic.Framework.Spells
 {
-    internal class WaterSpell : Spell
+    internal class CollectionSpell : Spell
     {
         /*********
         ** Public methods
         *********/
-        public WaterSpell()
-            : base(SchoolId.Toil, "water") { }
+
+        public CollectionSpell()
+            : base(SchoolId.Toil, "collect") { }
 
         public override int GetManaCost(Farmer player, int level)
         {
@@ -21,7 +31,7 @@ namespace Magic.Framework.Spells
 
         public override IActiveEffect OnCast(Farmer player, int level, int targetX, int targetY)
         {
-            level += 1;
+            level += 1 + (level * 2);
             targetX /= Game1.tileSize;
             targetY /= Game1.tileSize;
 
@@ -37,15 +47,17 @@ namespace Magic.Framework.Spells
 
                     Vector2 tile = new Vector2(tileX, tileY);
 
-                    if (!loc.terrainFeatures.TryGetValue(tile, out TerrainFeature feature) || feature is not HoeDirt dirt)
-                        continue;
-                    
-                    if (dirt.state.Value != HoeDirt.dry)
-                        continue;
+                    #region Harvest Machines
+                    loc.objects.TryGetValue(tile, out StardewValley.Object? machine);
 
-                    dirt.state.Value = HoeDirt.watered;
+                    if (machine != null && machine.readyForHarvest.Value && machine.heldObject.Value != null)
+                    {
+                        machine.checkForAction(Game1.player);
+                        
+                    }
+                    #endregion
 
-                    loc.temporarySprites.Add(new TemporaryAnimatedSprite(13, new Vector2(tileX * (float)Game1.tileSize, tileY * (float)Game1.tileSize), Color.White, 10, Game1.random.NextDouble() < 0.5, 70f, 0, Game1.tileSize, (float)((tileY * (double)Game1.tileSize + Game1.tileSize / 2) / 10000.0 - 0.00999999977648258))
+                    loc.temporarySprites.Add(new TemporaryAnimatedSprite(13, new Vector2(tileX * (float)Game1.tileSize, tileY * (float)Game1.tileSize), Color.Brown, 10, Game1.random.NextDouble() < 0.5, 70f, 0, Game1.tileSize, (float)((tileY * (double)Game1.tileSize + Game1.tileSize / 2) / 10000.0 - 0.00999999977648258))
                     {
                         delayBeforeAnimationStart = num * 10
                     });
@@ -53,10 +65,9 @@ namespace Magic.Framework.Spells
 
                     player.AddMana(-4);
                     player.AddCustomSkillExperience(Magic.Skill, 1*level);
-                    loc.localSoundAt("wateringCan", tile);
+                    loc.localSoundAt("grunt", tile);
                 }
             }
-
             return null;
         }
     }

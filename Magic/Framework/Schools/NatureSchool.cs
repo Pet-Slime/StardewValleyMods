@@ -17,7 +17,7 @@ namespace Magic.Framework.Schools
 
         public override Spell[] GetSpellsTier2()
         {
-            return new[] { SpellManager.Get("nature:shockwave") };
+            return new[] { SpellManager.Get("nature:shockwave"), SpellManager.Get("nature:magnetic_force") };
         }
 
         public override Spell[] GetSpellsTier3()

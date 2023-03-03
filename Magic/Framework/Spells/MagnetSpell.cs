@@ -4,13 +4,13 @@ using StardewValley;
 
 namespace Magic.Framework.Spells
 {
-    internal class BuffSpell : Spell
+    internal class MagnetSpell : Spell
     {
         /*********
         ** Public methods
         *********/
-        public BuffSpell()
-            : base(SchoolId.Life, "buff") { }
+        public MagnetSpell()
+            : base(SchoolId.Nature, "magnetic_force") { }
 
         public override bool CanCast(Farmer player, int level)
         {
@@ -18,7 +18,7 @@ namespace Magic.Framework.Spells
             {
                 foreach (var buff in Game1.buffsDisplay.otherBuffs)
                 {
-                    if (buff.source == "spell:life:buff")
+                    if (buff.source == "spell:nature:magnetic_force")
                         return false;
                 }
             }
@@ -28,7 +28,7 @@ namespace Magic.Framework.Spells
 
         public override int GetManaCost(Farmer player, int level)
         {
-            return 25;
+            return 10;
         }
 
         public override IActiveEffect OnCast(Farmer player, int level, int targetX, int targetY)
@@ -38,25 +38,13 @@ namespace Magic.Framework.Spells
 
             foreach (var buff in Game1.buffsDisplay.otherBuffs)
             {
-                if (buff.source == "spell:life:buff")
+                if (buff.source == "spell:nature:magnetic_force")
                     return null;
             }
 
- //           Game1.player.removeBuffAttributes();
- //           Game1.player.attack = 0;
-
-            int l = level + 1;
-            int farm = l, fish = l, mine = l, luck = l, forage = l, def = 0 /*1*/, atk = 2;
-            atk = l switch
-            {
-                2 => 5,
-                3 => 10,
-                _ => atk
-            };
-
-            Game1.buffsDisplay.addOtherBuff(new Buff(farm, fish, mine, 0, luck, forage, 0, 0, 0, 0, def, atk, 60 + level * 120, "spell:life:buff", "Buff (spell)"));
+            Game1.buffsDisplay.addOtherBuff(new Buff(0, 0, 0, 0, 0, 0, 0, 0, (level+1) * 5, 0, level + 1, 0, 60 + level * 120, "spell:nature:magnetic_force", "Magnet Force (spell)"));
             player.LocalSound("powerup");
-            player.AddCustomSkillExperience(Magic.Skill, 10);
+            player.AddCustomSkillExperience(Magic.Skill, 5);
             return null;
         }
     }
