@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -26,30 +27,30 @@ namespace SpaceCore.Patches
         public override void Apply(Harmony harmony, IMonitor monitor)
         {
             harmony.Patch(
-                original: this.RequireMethod<GameLocation>(nameof(GameLocation.performAction)),
-                prefix: this.GetHarmonyMethod(nameof(Before_PerformAction)),
+                original: this.RequireMethod<GameLocation>(nameof(GameLocation.performAction), new Type[] { typeof( string[] ), typeof( Farmer ), typeof( Location ) }),
                 transpiler: this.GetHarmonyMethod(nameof(Transpile_PerformAction), after: "DaLion.ImmersiveProfessions")
             );
 
-            harmony.Patch(
-                original: this.RequireMethod<GameLocation>(nameof(GameLocation.answerDialogueAction)),
-                postfix: this.GetHarmonyMethod(nameof(After_AnswerDialogueAction)),
-                transpiler: this.GetHarmonyMethod(nameof(Transpile_AnswerDialogueAction), after: "DaLion.ImmersiveProfessions")
-            );
-
-            harmony.Patch(
-                original: this.RequireMethod<GameLocation>(nameof(GameLocation.performTouchAction)),
-                prefix: this.GetHarmonyMethod(nameof(Before_PerformTouchAction))
-            );
+            if (Constants.TargetPlatform != GamePlatform.Android)
+            {
+                harmony.Patch(
+                    original: this.RequireMethod<GameLocation>(nameof(GameLocation.answerDialogueAction)),
+                    postfix: this.GetHarmonyMethod(nameof(After_AnswerDialogueAction)),
+                    transpiler: this.GetHarmonyMethod(nameof(Transpile_AnswerDialogueAction), after: "DaLion.ImmersiveProfessions")
+                );
+            }
+            else
+            {
+                harmony.Patch(
+                    original: this.RequireMethod<GameLocation>(nameof(GameLocation.answerDialogueAction)),
+                    postfix: this.GetHarmonyMethod(nameof(After_AnswerDialogueAction)),
+                    transpiler: this.GetHarmonyMethod(nameof(GameLocationPatcher.Transpile_AnswerDialogueActionMobile), after: "DaLion.ImmersiveProfessions")
+                );
+            }
 
             harmony.Patch(
                 original: this.RequireMethod<GameLocation>(nameof(GameLocation.explode)),
                 postfix: this.GetHarmonyMethod(nameof(After_Explode))
-            );
-
-            harmony.Patch(
-                original: this.RequireMethod<GameLocation>( nameof( GameLocation.GetLocationContext ) ),
-                prefix: this.GetHarmonyMethod( nameof( Before_GetLocationContext ) )
             );
         }
 
@@ -57,11 +58,6 @@ namespace SpaceCore.Patches
         /*********
         ** Private methods
         *********/
-        /// <summary>The method to call before <see cref="GameLocation.performAction"/>.</summary>
-        private static bool Before_PerformAction(GameLocation __instance, string action, Farmer who, Location tileLocation)
-        {
-            return !SpaceEvents.InvokeActionActivated(who, action, tileLocation);
-        }
 
         private static IEnumerable<CodeInstruction> Transpile_PerformAction(ILGenerator gen, MethodBase original, IEnumerable<CodeInstruction> insns)
         {
@@ -87,6 +83,9 @@ namespace SpaceCore.Patches
                 }
             }
 
+            if (!isPatched)
+                Log.Warn("Failed to patch GameLocation.performAction!");
+
             return ret;
         }
 
@@ -99,7 +98,38 @@ namespace SpaceCore.Patches
             {
                 if (!isPatched && CodeInstructionExtensions.Is(codes[i + 3], OpCodes.Ldstr, "Strings\\Locations:Sewer_DogStatueCancel"))
                 {
-                    ret.Add(new CodeInstruction(OpCodes.Ldloc_1).WithLabels(codes[i].labels));
+                    ret.Add(new CodeInstruction(OpCodes.Ldloc_S, SpaceCore.GetLocalIndexForMethod(original, "skill_responses").Single()).WithLabels(codes[i].labels));
+                    ret.Add(new CodeInstruction(OpCodes.Call, PatchHelper.RequireMethod<Skills>(nameof(Skills.GetRespecCustomResponses))));
+                    ret.Add(new CodeInstruction(OpCodes.Call, PatchHelper.RequireMethod<List<Response>>(nameof(List<Response>.AddRange))));
+                    codes[i].labels.Clear();
+
+                    isPatched = true;
+                }
+                ret.Add(codes[i]);
+            }
+
+            if (!isPatched)
+                Log.Warn("Failed to patch GameLocation.answerDialogueAction!");
+
+            return ret;
+        }
+
+
+        private static IEnumerable<CodeInstruction> Transpile_AnswerDialogueActionMobile(ILGenerator gen, MethodBase original, IEnumerable<CodeInstruction> insns)
+        {
+            List<CodeInstruction> ret = new List<CodeInstruction>();
+            var codes = new List<CodeInstruction>(insns);
+            LocalBuilder listLocal = null;
+            bool isPatched = false;
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (listLocal == null && codes[i].opcode == OpCodes.Ldloc_S && (codes[i].operand as LocalBuilder).LocalType == typeof(List<Response>))
+                {
+                    listLocal = codes[i].operand as LocalBuilder;
+                }
+                if (!isPatched && CodeInstructionExtensions.Is(codes[i + 3], OpCodes.Ldstr, "Strings\\Locations:Sewer_DogStatueCancel"))
+                {
+                    ret.Add(new CodeInstruction(OpCodes.Ldloc_S, listLocal).WithLabels(codes[i].labels));
                     ret.Add(new CodeInstruction(OpCodes.Call, PatchHelper.RequireMethod<Skills>(nameof(Skills.GetRespecCustomResponses))));
                     ret.Add(new CodeInstruction(OpCodes.Call, PatchHelper.RequireMethod<List<Response>>(nameof(List<Response>.AddRange))));
                     codes[i].labels.Clear();
@@ -150,56 +180,10 @@ namespace SpaceCore.Patches
             }
         }
 
-        /// <summary>The method to call before <see cref="GameLocation.performTouchAction"/>.</summary>
-        private static bool Before_PerformTouchAction(GameLocation __instance, string fullActionString, Vector2 playerStandingPosition)
-        {
-            return !SpaceEvents.InvokeTouchActionActivated(Game1.player, fullActionString, new Location(0, 0));
-        }
-
         /// <summary>The method to call after <see cref="GameLocation.explode"/>.</summary>
         private static void After_Explode(GameLocation __instance, Vector2 tileLocation, int radius, Farmer who)
         {
             SpaceEvents.InvokeBombExploded(who, tileLocation, radius);
-        }
-
-        private static bool Before_GetLocationContext( GameLocation __instance, ref GameLocation.LocationContext __result )
-        {
-            __result = GetLocationContextImpl( __instance );
-            return false;
-        }
-
-        private static GameLocation.LocationContext GetLocationContextImpl( GameLocation loc )
-        {
-            if ( loc.locationContext == ( GameLocation.LocationContext ) ( -1 ) )
-            {
-                if ( loc.map == null )
-                {
-                    loc.reloadMap();
-                }
-                loc.locationContext = GameLocation.LocationContext.Default;
-                string location_context = null;
-                PropertyValue value = null;
-                if ( loc.map == null )
-                {
-                    return GameLocation.LocationContext.Default;
-                }
-                location_context = ( ( !loc.map.Properties.TryGetValue( "LocationContext", out value ) ) ? "" : value.ToString() );
-                bool foundCustom = false;
-                foreach ( var kvp in SpaceCore.CustomLocationContexts )
-                {
-                    if ( kvp.Value.Name == location_context )
-                    {
-                        loc.locationContext = kvp.Key;
-                        foundCustom = true;
-                        break;
-                    }
-                }
-                if ( !foundCustom && location_context != "" && !Enum.TryParse<GameLocation.LocationContext>( location_context, out loc.locationContext ) )
-                {
-                    loc.locationContext = GameLocation.LocationContext.Default;
-                }
-            }
-            return loc.locationContext;
         }
     }
 }

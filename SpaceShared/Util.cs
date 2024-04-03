@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Tools;
 
 namespace SpaceShared
 {
@@ -25,7 +27,7 @@ namespace SpaceShared
 
             // This is really bad. Pathos don't kill me.
             var modInfo = modRegistry.Get( packId );
-            
+
             if (modInfo is null)
                 return Game1.staminaRect;
 
@@ -60,6 +62,27 @@ namespace SpaceShared
 
         public static string? FetchTexturePath( IModRegistry modRegistry, string modIdAndPath )
             => FetchTextureLocation(modRegistry, modIdAndPath)?.BaseName;
+
+        public static string FetchFullPath(IModRegistry modRegistry, string modIdAndPath)
+        {
+            if (modIdAndPath == null || modIdAndPath.IndexOf('/') == -1)
+                return null;
+
+            string packId = modIdAndPath.Substring(0, modIdAndPath.IndexOf('/'));
+            string path = modIdAndPath.Substring(modIdAndPath.IndexOf('/') + 1);
+
+            // This is really bad. Pathos don't kill me.
+            var modInfo = modRegistry.Get(packId);
+            if (modInfo is null)
+                return null;
+
+            if (modInfo.GetType().GetProperty("Mod")?.GetValue(modInfo) is IMod mod)
+                return Path.Combine(mod.Helper.DirectoryPath, path);
+            else if (modInfo.GetType().GetProperty("ContentPack")?.GetValue(modInfo) is IContentPack pack)
+                return Path.Combine(pack.DirectoryPath, path);
+
+            return null;
+        }
 
 #nullable restore
 
@@ -144,6 +167,45 @@ namespace SpaceShared
                 return new Color(t, p, v);
             else
                 return new Color(v, p, q);
+        }
+
+        // https://stackoverflow.com/a/57385008
+        public static IEnumerable<Color> GetColorGradient(Color from, Color to, int totalNumberOfColors)
+        {
+            if (totalNumberOfColors< 2)
+            {
+                throw new ArgumentException("Gradient cannot have less than two colors.", nameof(totalNumberOfColors));
+            }
+
+            double diffA = to.A - from.A;
+            double diffR = to.R - from.R;
+            double diffG = to.G - from.G;
+            double diffB = to.B - from.B;
+
+            int steps = totalNumberOfColors - 1;
+
+            double stepA = diffA / steps;
+            double stepR = diffR / steps;
+            double stepG = diffG / steps;
+            double stepB = diffB / steps;
+
+            yield return from;
+
+            for (int i = 1; i<steps; ++i)
+            {
+                yield return new Color(
+                    c(from.R, stepR),
+                    c(from.G, stepG),
+                    c(from.B, stepB),
+                    c(from.A, stepA));
+
+                    int c(int fromC, double stepC)
+                {
+                    return (int)Math.Round(fromC + stepC * i);
+                }
+            }
+
+            yield return to;
         }
 
         // Stolen from SMAPI

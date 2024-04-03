@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using Microsoft.Xna.Framework.Graphics;
 using SpaceShared;
 using StardewModdingAPI;
 using StardewValley;
@@ -14,27 +17,6 @@ namespace MajesticArcana
             instance = this;
             Log.Monitor = Monitor;
             I18n.Init(Helper.Translation);
-
-            AlchemyRecipes.Init();
-
-            Helper.ConsoleCommands.Add("magik_alchemy", "...", OnAlchemyCommand);
-            Helper.ConsoleCommands.Add("magik_spellcrafting", "...", OnSpellcraftingCommand);
-        }
-
-        private void OnAlchemyCommand(string arg1, string[] arg2)
-        {
-            if (!Context.IsPlayerFree)
-                return;
-
-            Game1.activeClickableMenu = new AlchemyMenu();
-        }
-
-        private void OnSpellcraftingCommand(string arg1, string[] arg2)
-        {
-            if (!Context.IsPlayerFree)
-                return;
-
-            Game1.activeClickableMenu = new SpellcraftingMenu();
         }
     }
 }

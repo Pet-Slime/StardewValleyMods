@@ -7,6 +7,7 @@ using Spacechase.Shared.Patching;
 using SpaceShared;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Inventories;
 using StardewValley.Menus;
 using StardewValley.Objects;
 
@@ -26,10 +27,20 @@ namespace SpaceCore.Patches
                 original: this.RequireMethod<CraftingRecipe>(nameof(CraftingRecipe.consumeIngredients)),
                 prefix: this.GetHarmonyMethod(nameof(Before_CraftingRecipe_ConsumeIngredients))
             );
-            harmony.Patch(
-                original: this.RequireMethod<CraftingPage>("layoutRecipes"),
-                transpiler: this.GetHarmonyMethod(nameof(Transpile_CraftingPage_LayoutRecipes))
-            );
+            if(Constants.TargetPlatform != GamePlatform.Android)
+            {
+                harmony.Patch(
+                    original: this.RequireMethod<CraftingPage>("layoutRecipes"),
+                    transpiler: this.GetHarmonyMethod(nameof(Transpile_CraftingPage_LayoutRecipes))
+                );
+            }
+            else
+            {
+                harmony.Patch(
+                    original: this.RequireMethod<CraftingPage>("setupRecipes"),
+                    transpiler: this.GetHarmonyMethod(nameof(Transpile_CraftingPage_SetupRecipes))
+                );
+            }
             harmony.Patch(
                 original: this.RequireMethod<CollectionsPage>(nameof(CollectionsPage.createDescription)),
                 transpiler: this.GetHarmonyMethod(nameof(Transpile_CollectionsPage_CreateDescription))
@@ -42,13 +53,13 @@ namespace SpaceCore.Patches
         *********/
         /// <summary>The method to call before <see cref="CraftingRecipe.consumeIngredients"/>.</summary>
         /// <returns>Returns whether to run the original method.</returns>
-        private static bool Before_CraftingRecipe_ConsumeIngredients(CraftingRecipe __instance, List<Chest> additional_materials)
+        private static bool Before_CraftingRecipe_ConsumeIngredients(CraftingRecipe __instance, List<IInventory> additionalMaterials)
         {
             if (__instance is Framework.CustomCraftingRecipe ccr)
             {
                 foreach (var ingredient in ccr.recipe.Ingredients)
                 {
-                    ingredient.Consume(additional_materials);
+                    ingredient.Consume(additionalMaterials);
                 }
                 return false;
             }
@@ -79,6 +90,38 @@ namespace SpaceCore.Patches
                     newInstructions.Add(new CodeInstruction(OpCodes.Call, PatchHelper.RequireMethod<CraftingRecipePatcher>(nameof(RedirectedCTCCreation))));
                     newInstructions.Add(new CodeInstruction(OpCodes.Stloc_S, instruction.operand));
                     newInstructions.Add(instruction);
+
+                    didIt = true;
+                    continue;
+                }
+
+                newInstructions.Add(instruction);
+            }
+
+            return newInstructions;
+        }
+
+        /// <summary>The method which transpiles <see cref="CraftingPage.layoutRecipes"/>.</summary>
+        /// <returns>Returns whether to run the original method.</returns>
+        private static IEnumerable<CodeInstruction> Transpile_CraftingPage_SetupRecipes(ILGenerator gen, MethodBase original, IEnumerable<CodeInstruction> instructions)
+        {
+            instructions = CraftingRecipePatcher.Transpile_CollectionsPage_CreateDescription(gen, original, instructions);
+
+            LocalBuilder recipeLocal = null;
+            bool didIt = false;
+            var newInstructions = new List<CodeInstruction>();
+            foreach (var instruction in instructions)
+            {
+                if (recipeLocal == null && instruction.opcode == OpCodes.Ldloc_S && (instruction.operand as LocalBuilder).LocalType == typeof(CraftingRecipe))
+                {
+                    recipeLocal = instruction.operand as LocalBuilder;
+                }
+                else if (!didIt && instruction.opcode == OpCodes.Newobj && instruction.operand is ConstructorInfo constructor && constructor.DeclaringType == typeof(ClickableTextureComponent))
+                {
+                    Log.Trace($"Found first newobj for ClickableTextureComponent in {original}; storing potential override w/ recipeLocal={recipeLocal}");
+                    newInstructions.Add(instruction);
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldloc_S, recipeLocal));
+                    newInstructions.Add(new CodeInstruction(OpCodes.Call, PatchHelper.RequireMethod<CraftingRecipePatcher>(nameof(RedirectedCTCCreation))));
 
                     didIt = true;
                     continue;
